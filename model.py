@@ -100,7 +100,7 @@ def train_model(x_train, y_train, x_test, y_test, idx):
     # else:
     model = keras.models.load_model(model_name)
 
-    # Initiate RMSprop optimizer
+    # Initiate SGD optimizer
     opt = keras.optimizers.SGD(learning_rate=0.1)
 
     # Let's train the model using RMSprop
