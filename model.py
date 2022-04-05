@@ -79,26 +79,19 @@ def train_model(x_train, y_train, x_test, y_test, idx):
     epochs = 10
 
     # Models
-    # if idx == 1:
-    model = keras.Sequential()
-
-    model.add(keras.layers.Conv2D(32, (3, 3), padding='same', input_shape=x_train.shape[1:]))
-    model.add(keras.layers.Activation('relu'))
-    model.add(keras.layers.Conv2D(32, (3, 3)))
-    model.add(keras.layers.Activation('relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Conv2D(64, (3, 3), padding='same'))
-    model.add(keras.layers.Activation('relu'))
-    model.add(keras.layers.Conv2D(64, (3, 3)))
-    model.add(keras.layers.Activation('relu'))
-    model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(512))
-    model.add(keras.layers.Activation('relu'))
-    model.add(keras.layers.Dense(num_classes))
-    model.add(keras.layers.Activation('softmax'))
-    # else:
-    model = keras.models.load_model(model_name)
+    """Let's use ResNet50 to train the model."""
+    model = keras.Sequential([
+        keras.applications.ResNet50(include_top=False,
+            weights='imagenet',
+            input_shape=x_train[1].shape),
+            keras.layers.GlobalAveragePooling2D(),
+            keras.layers.Dense(num_classes),
+            keras.layers.Activation('softmax')
+            ])
+    model.summary()
+    
+    if idx > 1:  # Simulated the Swarm Learning
+        model = keras.models.load_model(model_name)
 
     # Initiate SGD optimizer
     opt = keras.optimizers.SGD(learning_rate=0.1)
