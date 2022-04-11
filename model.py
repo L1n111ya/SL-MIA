@@ -1,117 +1,130 @@
-from tabnanny import verbose
-from turtle import shape
-import numpy as np
-from tqdm import tqdm 
 import tensorflow as tf
-from tensorflow import keras
-from six.moves import cPickle
+from tensorflow.keras.layers import GlobalAveragePooling2D, Dense, Activation, Conv2D, MaxPooling2D, Flatten
+from tensorflow.keras.applications import ResNet50V2, ResNet101V2, DenseNet121, VGG16, VGG19
 
-import os
-import sys
-os.environ['CUDA_VISIBLE_DEVICES']='1' 
 
-def cifar10_load_data(data_dir='./data', idx=1):
-    """Loads CIFAR10 dataset.
-    # Returns
-        Tuple of Numpy arrays: `(x_train, y_train), (x_test, y_test)`.
+def get_Resnet50(input_shape, num_classes):
+    """Define and return the ResNet50V2 model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object named ResNet50V2.
     """
-
-    def cifar10_load_batch(batch_file, label_key='labels'):
-        """Internal utility for parsing CIFAR data.
-        # Arguments
-            batch_file: path to the batch file to parse.
-            label_key: key for label data in the retrieve dictionary.
-        # Returns
-            A tuple `(data, labels)`.
-        """
-        with open(batch_file, 'rb') as f:
-            if sys.version_info < (3,):
-                d = cPickle.load(f)
-            else:
-                d = cPickle.load(f, encoding='bytes')
-                # decode utf8
-                d_decoded = {}
-                for k, v in d.items():
-                    d_decoded[k.decode('utf8')] = v
-                d = d_decoded
-
-        data = d['data']
-        labels = d[label_key]
-
-        data = data.reshape(data.shape[0], 3, 32, 32)
-        return data, labels
-
-    num_train_samples = 10000
-
-    x_train = np.empty((num_train_samples, 3, 32, 32), dtype='uint8')
-    y_train = np.empty((num_train_samples,), dtype='uint8')
-
-    batch_file = './data/data_batch_' + str(idx)
-    x_train, y_train = cifar10_load_batch(batch_file)
-
-    batch_file = './data/test_batch'
-    x_test, y_test = cifar10_load_batch(batch_file)
-
-    y_train = np.reshape(y_train, (len(y_train), 1))
-    y_test = np.reshape(y_test, (len(y_test), 1))
-
-    x_train = x_train.transpose(0, 2, 3, 1)
-    x_test = x_test.transpose(0, 2, 3, 1)
-
-    return (x_train, y_train), (x_test, y_test)
-
-def train_model(x_train, y_train, x_test, y_test, idx):
-    if idx == 1:
-        model_name = './model/cifar10_trained_model' + str(5) + '.h5'
-    else:
-        model_name = './model/cifar10_trained_model' + str(idx-1) + '.h5'
-    save_model = './model/cifar10_trained_model' + str(idx) + '.h5'
-
-    # The data, split between train and test sets:
-    print('x_train shape:', x_train.shape)
-    print(x_train.shape[0], 'train samples')
-    print(x_test.shape[0], 'test samples')
-    x_train, x_test = x_train / 255.0, x_test / 255.0
-
-    # Initialization
-    batch_size = 32
-    num_classes = 10  
-    epochs = 10
-
-    # Models
-    """Let's use ResNet50 to train the model."""
-    model = keras.Sequential([
-        keras.applications.ResNet50(include_top=False,
-            weights='imagenet',
-            input_shape=x_train[1].shape),
-            keras.layers.GlobalAveragePooling2D(),
-            keras.layers.Dense(num_classes),
-            keras.layers.Activation('softmax')
-            ])
+    model = tf.keras.Sequential([
+        ResNet50V2(include_top=False,
+                   weights='imagenet',
+                   input_shape=input_shape),
+        GlobalAveragePooling2D(),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
     model.summary()
     
-    if idx > 1:  # Simulated the Swarm Learning
-        model = keras.models.load_model(model_name)
+    return model
 
-    # Initiate SGD optimizer
-    opt = keras.optimizers.SGD(learning_rate=0.1)
 
-    # Let's train the model using RMSprop
-    model.compile(loss='sparse_categorical_crossentropy',
-                optimizer=opt,
-                metrics=['accuracy'])
+def get_ResNet101(input_shape, num_classes):
+    """Define and return the ResNet101V2 model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object named ResNet101V2.
+    """
+    model = tf.keras.Sequential([
+        ResNet101V2(include_top=False,
+                   weights='imagenet',
+                   input_shape=input_shape),
+        GlobalAveragePooling2D(),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
+    model.summary()
     
-    model.fit(x_train, y_train,
-          batch_size=batch_size,
-          epochs=epochs,
-          validation_data=(x_test, y_test),
-          shuffle=True,
-          verbose=1)
+    return model
 
-    model.save(save_model)
-    print('Saved trained model at %s ' % save_model)
 
-    # Score trained model.
-    scores = model.evaluate(x_test, y_test, verbose=1)
-    print('Test loss:', scores[0])
-    print('Test accuracy:', scores[1])
+def get_DenceNet121(input_shape, num_classes):
+    """Define and return the DenceNet121 model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object named DenceNet121.
+    """
+    model = tf.keras.Sequential([
+        DenseNet121(include_top=False,
+                    weights='imagenet',
+                    input_shape=input_shape),
+        GlobalAveragePooling2D(),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
+    model.summary()
+    
+    return model
+
+
+def get_VGG16(input_shape, num_classes):
+    """Define and return the VGG16 model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object named VGG16.
+    """
+    model = tf.keras.Sequential([
+        VGG16(include_top=False,
+                weights='imagenet',
+                input_shape=input_shape),
+        GlobalAveragePooling2D(),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
+    model.summary()
+    
+    return model
+
+
+def get_VGG19(input_shape, num_classes):
+    """Define and return the VGG19 model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object named VGG19.
+    """
+    model = tf.keras.Sequential([
+        VGG19(include_top=False,
+                weights='imagenet',
+                input_shape=input_shape),
+        GlobalAveragePooling2D(),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
+    model.summary()
+    
+    return model
+
+
+def get_CNN(input_shape, num_classes):
+    """Define and return the CNN model.
+    Args:
+        input_shape: a tensor defined the data shape.
+        num_classes: the number of classes.
+    Returns: 
+        a keras model object of CNN.
+    """
+    model = tf.keras.Sequential([
+        Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
+        Conv2D(32, (3, 3), activation='relu'),
+        MaxPooling2D(pool_size=(2, 2)), 
+        Flatten(),
+        Dense(128, activation='relu'),
+        Dense(num_classes),
+        Activation('softmax')
+    ])
+    model.summary()
+    
+    return model
